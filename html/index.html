@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>Remote Switch</title>
+        <link rel="stylesheet" href="/styles.css" />
+        <script src="https://unpkg.com/vue@next"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <div id="app">
+            <channel-view v-for="channelNumber in channels" :channel_number="channelNumber"></channel-view>
+        </div>
+        <script src="/main.js"></script>
+        <script src="/channel.js"></script>
+        <script>
+            const mountedApp = app.mount('#app')
+        </script>
+    </body>
+</html>
