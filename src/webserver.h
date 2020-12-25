@@ -1,6 +1,9 @@
 #pragma once
 
 
-void webServer_setup();
+class LedController;
+
+
+void webServer_setup(LedController& controller);
 
 void webServer_onLoop();

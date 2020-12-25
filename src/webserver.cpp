@@ -1,103 +1,14 @@
 #include "webserver.h"
 
-#include <vector>
-
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-#include <WString.h>
+
+#include "ledcontroller.h"
 
 
-class LedChannel
-{
-public:
-    LedChannel(uint8_t channelNumber)
-        :
-        _channelNumber(channelNumber),
-        _mode(OFF)
-    {
-    }
-    uint8_t number() const
-    {
-        return _channelNumber;
-    }
-    bool setMode(const String& mode)
-    {
-        auto newMode = modeFromString(mode);
-        if (newMode == UNKNOWN)
-        {
-            return false;
-        }
+LedController* _controller = NULL;
 
-        Serial.println("Changed channel " + String(_channelNumber) + " mode to \"" + mode + "\"");
-        _mode = newMode;
-        return true;
-    }
-    String getMode() const
-    {
-        return modeToString(_mode);
-    }
-    static std::vector<String> supportedModes()
-    {
-        return _supportedModes;
-    }
-    static bool isSupportedMode(const String& modeString)
-    {
-        return modeFromString(modeString) != UNKNOWN;
-    }
-private:
-    enum Mode
-    {
-        OFF,
-        CONSTANT,
-        FADE,
-        FADE_ALTERNATE,
-        UNKNOWN = 999
-    };
-    static String modeToString(Mode mode)
-    {
-        switch (mode)
-        {
-            case OFF:
-                return "Off";
-            case CONSTANT:
-                return "Constant";
-            case FADE:
-                return "Fade";
-            case FADE_ALTERNATE:
-                return "Alternating Fade";
-            default:
-                return "UNKNOWN";
-        }
-    }
-    static Mode modeFromString(const String& modeString)
-    {
-        if (modeString == "Off")
-        {
-            return OFF;
-        }
-        if (modeString == "Constant")
-        {
-            return CONSTANT;
-        }
-        if (modeString == "Fade")
-        {
-            return FADE;
-        }
-        if (modeString == "Alternating Fade")
-        {
-            return FADE_ALTERNATE;
-        }
-        return UNKNOWN;
-    }
-    uint8_t _channelNumber;
-    Mode _mode;
-    static std::vector<String> _supportedModes;
-};
-
-std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT), modeToString(FADE), modeToString(FADE_ALTERNATE) };
-
-std::vector<LedChannel> _channels{ LedChannel(1), LedChannel(2) };
 
 ESP8266WebServer server(80);
 
@@ -185,7 +96,7 @@ void handle_supported_modes()
 void handle_channels()
 {
     String message = "[";
-    for (const auto& channel : _channels)
+    for (const auto& channel : _controller->channels())
     {
         if (!message.endsWith("["))
         {
@@ -216,7 +127,7 @@ void handle_mode()
         }
 
         LedChannel* channel = NULL;
-        for (auto& _channel : _channels)
+        for (auto& _channel : _controller->channels())
         {
             if (_channel.number() == channelNumber)
             {
@@ -334,8 +245,9 @@ void replyOK()
 }
 
 
-void webServer_setup()
+void webServer_setup(LedController& controller)
 {
+    _controller = &controller;
 
     server.on("/", handleRoot);
     server.on("/supported_modes", handle_supported_modes);

@@ -31,31 +31,26 @@ app.component('channel-view', {
     methods: {
         gotModes(modeList) {
             this.supportedModes = modeList;
-            console.log('Got channel modes ' + this.supportedModes);
         },
         gotMode(mode) {
             this.mode = mode;
-            console.log('Got channel ' + this.channel_number + ' mode: ' + this.mode);
         },
         getMode() {
-            console.log('Getting channel ' + this.channel_number + ' mode');
             axios.
                 get('/mode?channel=' + this.channel_number).
                 then(response => this.gotMode(response.data)).
                 catch(error => console.log('Failed to get station mode: ' + error));
         },
         handleSetModeSuccess() {
-            console.log('Successfully set channel ' + this.channel_number + ' mode to ' + this.mode);
             this.getMode();
         },
         handleSetModeError(error) {
             var message = 'Failed to change channel mode to ' + this.mode + ': ' + error;
-            console.log(message);
+            console.error(message);
             this.getMode(); // Try to get the mode again
             alert(message);
         },
         modeSelected() {
-            console.log('Setting channel ' + this.channel_number + ' mode to ' + this.mode);
             axios.
                 post('/mode?channel=' + this.channel_number + '&mode=' + this.mode).
                 then(response => this.handleSetModeSuccess()).
@@ -63,7 +58,6 @@ app.component('channel-view', {
         }
     },
     mounted() {
-        console.log('Getting supported channel modes');
         axios.
             get('/supported_modes').
             then(response => this.gotModes(response.data)).
