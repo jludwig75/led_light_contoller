@@ -5,15 +5,11 @@ app.component('channel-view', {
 <div class="channel-view">
     <fieldset>
         <legend><h3>Channel {{ channel_number }} Mode</h3></legend>
-        <form>
-            <ul class="channel-mode-list">
-                <li v-for="supportedMode in supportedModes">
-                    <input type="radio" :id="supportedMode + channel_number" v-model="mode" :value="supportedMode" v-on:change="modeSelected">
-                    <label :for="supportedMode + channel_number">{{ supportedMode }}</label>
-                    <br/>
-                </li>
-            </ul>
-        </form>
+        <span v-for="supportedMode in supportedModes">
+            <input type="radio" :id="supportedMode + channel_number" :name="mode + channel_number" v-model="mode" :value="supportedMode" v-on:change="modeSelected">
+            <label :for="supportedMode + channel_number">{{ supportedMode }}</label>
+            <br/>
+        </span>
     </fieldset>
 </div>
 `,
@@ -70,5 +66,10 @@ app.component('channel-view', {
     },
     beforeUnmount() {
         clearInterval(this.polling);
+    },
+    updated() {
+        $( "input" ).checkboxradio({
+            icon: false
+        });
     }
 });
