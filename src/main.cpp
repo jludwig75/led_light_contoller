@@ -1,60 +1,33 @@
 #include <Arduino.h>
-#include <Adafruit_MotorShield.h>
+#include <BasicOTA.h>
+#include <BasicWifi.h>
 
+#include "webserver.h"
+#include "filesystem.h"
 
-Adafruit_MotorShield motorController;
-auto* motor = motorController.getMotor(3);
+/* NOTE: please add this file (config.h) and define the following in it:
+const char* ssid = "SSID Name";
+const char* password = "SSID Passwod";
+const char* hostName = "Desired board host name";
+const char* otaPassword = "Desired OTA password";
+const uint8_t POWER_SWITCH_PIN = pin_to_control;
+*/
+#include "config.h" // <= This file is not part of the repo code. You must add it. See above. ^^^
+
 
 void setup()
 {
     Serial.begin(115200);
-    Serial.println("initializing motor shield");
-    motorController.begin();
-}
 
-
-#define FADE_STEP   4
-
-void fadeInAndOut(Adafruit_DCMotor* motor,
-                  uint8_t direction,
-                  unsigned long durationMs,
-                  unsigned long holdTime = 0,
-                  uint8_t minBrightness = 0,
-                  uint8_t maxBrightness = 255)
-{
-    auto numberOfSteps = ((maxBrightness - minBrightness) + 1) / FADE_STEP;
-    auto stepDuration = (durationMs / 2) / numberOfSteps;
-    if (stepDuration == 0)
-    {
-        stepDuration = 1;   // Sorry there is a minimum 128 ms duration
-    }
-
-    motor->setSpeed(0);
-    motor->run(direction);
-
-    for (int16_t brightness = minBrightness; brightness <= maxBrightness; brightness += FADE_STEP)
-    {
-        motor->setSpeed(brightness);
-        delay(stepDuration);
-    }
-    if (holdTime > 0)
-    {
-        delay(holdTime);
-    }
-    for (int16_t brightness = maxBrightness; brightness > minBrightness; brightness -= FADE_STEP)
-    {
-        motor->setSpeed(brightness);
-        delay(stepDuration);
-    }
-    motor->setSpeed(0);
+    fileSystem_setup();
+    wifi_setup(hostName, ssid, password);
+    ota_setup(hostName, otaPassword);
+    webServer_setup();
 }
 
 void loop()
 {
-    Serial.print(".");
-    fadeInAndOut(motor, FORWARD, 6000, 1000);
-    delay(1000);
-
-    fadeInAndOut(motor, BACKWARD, 6000, 1000);
-    delay(1000);
+    ota_onLoop();
+    webServer_onLoop();
+    wifi_onLoop();
 }
