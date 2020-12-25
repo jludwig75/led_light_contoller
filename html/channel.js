@@ -4,7 +4,7 @@ app.component('channel-view', {
 `
 <div class="channel-view">
     <fieldset>
-        <legend>Channel {{ channel_number }} Mode</legend>
+        <legend><h3>Channel {{ channel_number }} Mode</h3></legend>
         <form>
             <ul class="channel-mode-list">
                 <li v-for="supportedMode in supportedModes">
