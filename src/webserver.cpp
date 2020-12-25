@@ -58,24 +58,7 @@ void handleRoot()
         return;
     }
 
-    size_t webPageSize = webpage.available();
-    char *pageContent = new char[webPageSize + 1];
-    if (!pageContent)
-    {
-        server.send(500, "text/plain", "Could not allocate memory to load web page\r\n");
-        return;
-    }
-    FreeBufferOnExit<char> onExit(pageContent);
-
-    auto bytesRead = webpage.read(reinterpret_cast<uint8_t*>(pageContent), webPageSize);
-    if (bytesRead != webPageSize)
-    {
-        server.send(500, "text/plain", "Error loading web page\r\n");
-        return;
-    }
-    pageContent[webPageSize] = 0;
-
-    server.send(200, "text/html", pageContent);
+    server.streamFile(webpage, "text/html");
 }
 
 void handle_supported_modes()
