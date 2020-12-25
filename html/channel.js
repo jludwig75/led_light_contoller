@@ -6,11 +6,13 @@ app.component('channel-view', {
     <fieldset>
         <legend>Channel {{ channel_number }} Mode</legend>
         <form>
-            <span v-for="supportedMode in supportedModes">
-                <input type="radio" :id="supportedMode + channel_number" v-model="mode" :value="supportedMode" v-on:change="modeSelected">
-                <label :for="supportedMode + channel_number">{{ supportedMode }}</label>
-                <br/>
-            </span>
+            <ul class="channel-mode-list">
+                <li v-for="supportedMode in supportedModes">
+                    <input type="radio" :id="supportedMode + channel_number" v-model="mode" :value="supportedMode" v-on:change="modeSelected">
+                    <label :for="supportedMode + channel_number">{{ supportedMode }}</label>
+                    <br/>
+                </li>
+            </ul>
         </form>
     </fieldset>
 </div>

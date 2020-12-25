@@ -2,3 +2,47 @@
     float: left;
     margin: 5px;
 }
+
+.channel-mode-list {
+    list-style-type: none;
+    margin: 0 0 0 0;
+    padding: 0;
+  }
+  
+  .channel-mode-list li {
+    margin: 0 5px 0 0;
+    width: 180px;
+    height: 40px;
+    position: relative;
+  }
+  
+  .channel-mode-list label,
+  .channel-mode-list input {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  .channel-mode-list input[type="radio"] {
+    opacity: 0.01;
+    z-index: 100;
+  }
+  
+  .channel-mode-list input[type="radio"]:checked+label,
+  .Checked+label {
+    background: rgb(100, 166, 219);
+  }
+  
+  .channel-mode-list label {
+    padding: 5px;
+    border: 1px solid #CCC;
+    cursor: pointer;
+    z-index: 90;
+  }
+  
+  .channel-mode-list label:hover {
+    background: #DDD;
+  }
