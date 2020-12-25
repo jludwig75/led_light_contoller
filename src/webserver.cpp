@@ -11,14 +11,6 @@
 class LedChannel
 {
 public:
-    enum Mode
-    {
-        OFF,
-        CONSTANT,
-        FADE,
-        FADE_ALTERNATE,
-        UNKNOWN = 999
-    };
     LedChannel(uint8_t channelNumber)
         :
         _channelNumber(channelNumber),
@@ -31,7 +23,15 @@ public:
     }
     bool setMode(const String& mode)
     {
-        return false;
+        auto newMode = modeFromString(mode);
+        if (newMode == UNKNOWN)
+        {
+            return false;
+        }
+
+        Serial.println("Changed channel " + String(_channelNumber) + " mode to \"" + mode + "\"");
+        _mode = newMode;
+        return true;
     }
     String getMode() const
     {
@@ -46,6 +46,14 @@ public:
         return modeFromString(modeString) != UNKNOWN;
     }
 private:
+    enum Mode
+    {
+        OFF,
+        CONSTANT,
+        FADE,
+        FADE_ALTERNATE,
+        UNKNOWN = 999
+    };
     static String modeToString(Mode mode)
     {
         switch (mode)
@@ -67,6 +75,10 @@ private:
         if (modeString == "Off")
         {
             return OFF;
+        }
+        if (modeString == "Constant")
+        {
+            return CONSTANT;
         }
         if (modeString == "Fade")
         {
@@ -195,7 +207,7 @@ void handle_mode()
             return;
         }
 
-        auto channelString = server.arg("channel");
+        const auto& channelString = server.arg("channel");
         auto channelNumber = channelString.toInt();
         if (channelNumber == 0 && channelString != "0")
         {
@@ -203,8 +215,8 @@ void handle_mode()
             return;
         }
 
-        const LedChannel* channel = NULL;
-        for (const auto& _channel : _channels)
+        LedChannel* channel = NULL;
+        for (auto& _channel : _channels)
         {
             if (_channel.number() == channelNumber)
             {
@@ -212,7 +224,6 @@ void handle_mode()
                 break;
             }
         }
-
         if (channel == NULL)
         {
             server.send(404, "txt/plain", "Channel \"" + channelString + "\" not found");
@@ -226,6 +237,24 @@ void handle_mode()
                 server.send(400, "txt/plain", "\"mode\" argument was not specified");
                 return;
             }
+
+            const auto& mode = server.arg("mode");
+            if (!LedChannel::isSupportedMode(mode))
+            {
+                server.send(400, "txt/plain", "\"" + mode + "\" is not a supported mode");
+                return;
+            }
+
+            if (channel->setMode(mode))
+            {
+                server.send(200, "application/json", "OK");
+                return;
+            }
+            else
+            {
+                server.send(500, "txt/plain", "Unexpected error setting mode to \"" + mode + "\"");
+                return;
+            }
         }
         else if (server.method() == HTTP_GET)
         {
@@ -234,6 +263,8 @@ void handle_mode()
                 server.send(400, "txt/plain", "\"mode\" argument invalid for method GET");
                 return;
             }
+
+            server.send(200, "application/json", channel->getMode());
         }
     }
     else

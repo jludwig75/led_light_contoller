@@ -24,7 +24,8 @@ app.component('channel-view', {
     data() {
         return {
             supportedModes: [],
-            mode: null
+            mode: null,
+            polling: null
         }
     },
     methods: {
@@ -68,5 +69,9 @@ app.component('channel-view', {
             then(response => this.gotModes(response.data)).
             catch(error => console.log('Failed to get mode list: ' + error));
         this.getMode();
+        this.polling = setInterval(this.getMode, 1000);
+    },
+    beforeUnmount() {
+        clearInterval(this.polling);
     }
 });
