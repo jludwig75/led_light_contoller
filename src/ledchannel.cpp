@@ -8,7 +8,7 @@ LedChannel::LedChannel(uint8_t channelNumber,
                        uint8_t pin2)
     :
     _channelNumber(channelNumber),
-    _mode(OFF)
+    _mode(CONSTANT)
 {
 }
 uint8_t LedChannel::number() const

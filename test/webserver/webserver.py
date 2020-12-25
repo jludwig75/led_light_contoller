@@ -13,7 +13,7 @@ class LedChannel:
     SUPPORTED_MODES = [MODE_OFF, MODE_CONSTANT, MODE_FADE, MODE_FADE_ALTERNATE]
     def __init__(self, channelNumber):
         self._channelNumber = channelNumber
-        self._mode = LedChannel.MODE_OFF
+        self._mode = LedChannel.MODE_CONSTANT
     @property
     def number(self):
         return self._channelNumber

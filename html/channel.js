@@ -45,6 +45,7 @@ app.component('channel-view', {
             this.getMode();
         },
         handleSetModeError(error) {
+            this.mode = null;
             var message = 'Failed to change channel mode to ' + this.mode + ': ' + error;
             console.error(message);
             this.getMode(); // Try to get the mode again
