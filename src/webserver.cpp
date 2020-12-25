@@ -3,7 +3,75 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
+#include <WString.h>
 
+
+class LedChannel
+{
+public:
+    enum Mode
+    {
+        OFF,
+        CONSTANT,
+        FADE,
+        FADE_ALTERNATE,
+        UNKNOWN = 999
+    };
+    LedChannel(uint8_t channelNumber)
+        :
+        _channelNumber(channelNumber),
+        _mode(OFF)
+    {
+    }
+    uint8_t number() const
+    {
+        return _channelNumber;
+    }
+    bool setMode(const String& mode)
+    {
+        return false;
+    }
+    String getMode() const
+    {
+        return "Off";
+    }
+private:
+    String modeToString(Mode mode) const
+    {
+        switch (mode)
+        {
+            case OFF:
+                return "Off";
+            case CONSTANT:
+                return "Constant";
+            case FADE:
+                return "Fade";
+            case FADE_ALTERNATE:
+                return "Alternating Fade";
+            case UNKNOWN:
+                return "UNKNOWN";
+        }
+    }
+    Mode modeFromString(const String& modeString)
+    {
+        if (modeString == "Off")
+        {
+            return OFF;
+        }
+        if (modeString == "Fade")
+        {
+            return FADE;
+        }
+        if (modeString == "Alternating Fade")
+        {
+            return FADE_ALTERNATE;
+        }
+        return UNKNOWN;
+    }
+    uint8_t _channelNumber;
+    Mode _mode;
+    // SUPPORTED_MODES = [MODE_OFF, MODE_CONSTANT, MODE_FADE, MODE_FADE_ALTERNATE]
+};
 
 ESP8266WebServer server(80);
 
