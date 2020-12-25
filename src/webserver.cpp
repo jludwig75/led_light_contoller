@@ -1,5 +1,7 @@
 #include "webserver.h"
 
+#include <vector>
+
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
@@ -33,10 +35,18 @@ public:
     }
     String getMode() const
     {
-        return "Off";
+        return modeToString(_mode);
+    }
+    static std::vector<String> supportedModes()
+    {
+        return _supportedModes;
+    }
+    static bool isSupportedMode(const String& modeString)
+    {
+        return modeFromString(modeString) != UNKNOWN;
     }
 private:
-    String modeToString(Mode mode) const
+    static String modeToString(Mode mode)
     {
         switch (mode)
         {
@@ -48,11 +58,11 @@ private:
                 return "Fade";
             case FADE_ALTERNATE:
                 return "Alternating Fade";
-            case UNKNOWN:
+            default:
                 return "UNKNOWN";
         }
     }
-    Mode modeFromString(const String& modeString)
+    static Mode modeFromString(const String& modeString)
     {
         if (modeString == "Off")
         {
@@ -70,8 +80,12 @@ private:
     }
     uint8_t _channelNumber;
     Mode _mode;
-    // SUPPORTED_MODES = [MODE_OFF, MODE_CONSTANT, MODE_FADE, MODE_FADE_ALTERNATE]
+    static std::vector<String> _supportedModes;
 };
+
+std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT), modeToString(FADE), modeToString(FADE_ALTERNATE) };
+
+std::vector<LedChannel> _channels{ LedChannel(1), LedChannel(2) };
 
 ESP8266WebServer server(80);
 
@@ -141,43 +155,92 @@ void handleRoot()
     server.send(200, "text/html", pageContent);
 }
 
-// void handleState()
-// {
-//     if (server.method() == HTTP_GET)
-//     {
-//         server.send(200, "text/plain", switchStateToString(_powerSwitch->state()));
-//     }
-//     else if (server.method() == HTTP_POST)
-//     {
-//         if (!server.hasArg("state"))
-//         {
-//             server.send(400, "txt/plain", "\"state\" argument was not specified");
-//             return;
-//         }
+void handle_supported_modes()
+{
+    String message = "[";
+    for (const auto& mode : LedChannel::supportedModes())
+    {
+        if (!message.endsWith("["))
+        {
+            message += ", ";
+        }
+        message += "\"" + mode + "\"";
+    }
+    message += "]";
+    server.send(200, "application/json", message);
+}
 
-//         auto value = server.arg("state");
-//         if (value.equalsIgnoreCase("ON"))
-//         {
-//             _powerSwitch->turnOn();
-//             _indicatorLight->turnOn();
-//         }
-//         else if (value.equalsIgnoreCase("OFF"))
-//         {
-//             _powerSwitch->turnOff();
-//             _indicatorLight->turnOff();
-//         }
-//         else
-//         {
-//             server.send(400, "txt/plain", "Invalid value for argument \"state\": must be either \"on\" or \"off\".");
-//             return;
-//         }
-//         server.send(200, "text/plain", "OK");
-//     }
-//     else
-//     {
-//         server.send(405, "txt/plain", "method not supported\r\n");
-//     }
-// }
+void handle_channels()
+{
+    String message = "[";
+    for (const auto& channel : _channels)
+    {
+        if (!message.endsWith("["))
+        {
+            message += ", ";
+        }
+        message += String(channel.number());
+    }
+    message += "]";
+    server.send(200, "application/json", message);
+}
+
+void handle_mode()
+{
+    if (server.method() == HTTP_POST || server.method() == HTTP_GET)
+    {
+        if (!server.hasArg("channel"))
+        {
+            server.send(400, "txt/plain", "\"channel\" argument was not specified");
+            return;
+        }
+
+        auto channelString = server.arg("channel");
+        auto channelNumber = channelString.toInt();
+        if (channelNumber == 0 && channelString != "0")
+        {
+            server.send(400, "txt/plain", "Non-numeric value \"" + channelString + "\" for argument \"channel\"");
+            return;
+        }
+
+        const LedChannel* channel = NULL;
+        for (const auto& _channel : _channels)
+        {
+            if (_channel.number() == channelNumber)
+            {
+                channel = &_channel;
+                break;
+            }
+        }
+
+        if (channel == NULL)
+        {
+            server.send(404, "txt/plain", "Channel \"" + channelString + "\" not found");
+            return;
+        }
+
+        if (server.method() == HTTP_POST)
+        {
+            if (!server.hasArg("mode"))
+            {
+                server.send(400, "txt/plain", "\"mode\" argument was not specified");
+                return;
+            }
+        }
+        else if (server.method() == HTTP_GET)
+        {
+            if (server.hasArg("mode"))
+            {
+                server.send(400, "txt/plain", "\"mode\" argument invalid for method GET");
+                return;
+            }
+        }
+    }
+    else
+    {
+        server.send(405, "txt/plain", "method not supported\r\n");
+    }
+}
 
 File uploadFile;
 
@@ -244,7 +307,9 @@ void webServer_setup()
 {
 
     server.on("/", handleRoot);
-    // server.on("/state", handleState);
+    server.on("/supported_modes", handle_supported_modes);
+    server.on("/channels", handle_channels);
+    server.on("/mode", handle_mode);
     server.on("/upload", HTTP_POST, replyOK, handleUpload);
     server.on("/upload", HTTP_GET, handleGetUpload);
     server.serveStatic("/", SPIFFS, "/");
