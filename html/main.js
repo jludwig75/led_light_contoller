@@ -8,7 +8,6 @@ const app = Vue.createApp({
         gotChannels(channelList) {
             this.channels = []
             for (channelNumber of channelList) {
-                // Ignore the mode in the main script
                 this.channels.push(parseInt(channelNumber));
             }
         }
