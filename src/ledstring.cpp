@@ -15,6 +15,11 @@ LedString::LedString(uint8_t pin1, uint8_t pin2)
 void LedString::begin()
 {
     analogWriteFreq(10 * 1000); // Don't go too high to limit CPU utilization. 40KHz is the max
+    Serial.print(_pin1); Serial.println(" to 0");
+    analogWrite(_pin1, 0);
+    Serial.print(_pin2); Serial.println(" to 0");
+    analogWrite(_pin2, 0);
+    updateBrightness();
 }
 
 void LedString::setDirection(Direction direction)
@@ -25,7 +30,9 @@ void LedString::setDirection(Direction direction)
     }
     _direction = direction;
 
+    Serial.print(_pin1); Serial.println(" to 0");
     analogWrite(_pin1, 0);
+    Serial.print(_pin2); Serial.println(" to 0");
     analogWrite(_pin2, 0);
 
     if (_brightness > 0)
@@ -47,12 +54,16 @@ void LedString::setBrightness(int brightness)
 
 void LedString::updateBrightness()
 {
+    Serial.print("Setting brightness to ");
+    Serial.println(_brightness);
     if (_direction == FORWARD)
     {
+        Serial.print(_pin1); Serial.print(" to "); Serial.println(_brightness);
         analogWrite(_pin1, _brightness);
     }
     else
     {
+        Serial.print(_pin2); Serial.print(" to "); Serial.println(_brightness);
         analogWrite(_pin2, _brightness);
     }
 }

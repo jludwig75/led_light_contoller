@@ -37,7 +37,7 @@ bool LedChannel::setMode(const String& mode)
         _string.setBrightness(0);
         break;
     case CONSTANT:
-        _string.setBrightness(1023);
+        _string.setBrightness(511);
         break;
     default:
         // Not supported now.
