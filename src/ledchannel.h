@@ -20,6 +20,8 @@ public:
     String getMode() const;
     static std::vector<String> supportedModes();
     static bool isSupportedMode(const String& modeString);
+    void onLoop();
+    static void onTimerInterval();
 private:
     enum Mode
     {

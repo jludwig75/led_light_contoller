@@ -29,6 +29,7 @@ WebServer webServer(controller);
 void setup()
 {
     Serial.begin(115200);
+    delay(50);
     controller.begin();
 
     fileSystem_setup();
@@ -39,6 +40,7 @@ void setup()
 
 void loop()
 {
+    controller.onLoop();
     ota_onLoop();
     webServer.onLoop();
     wifi_onLoop();

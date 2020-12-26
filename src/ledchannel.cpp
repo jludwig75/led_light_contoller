@@ -16,6 +16,17 @@ LedChannel::LedChannel(uint8_t channelNumber,
 void LedChannel::begin()
 {
     _string.begin();
+    setMode(modeToString(_mode));
+}
+
+void LedChannel::onLoop()
+{
+    _string.onLoop();
+}
+
+void LedChannel::onTimerInterval()
+{
+    LedString::onTimerInterval();
 }
 
 uint8_t LedChannel::number() const
@@ -34,10 +45,12 @@ bool LedChannel::setMode(const String& mode)
     switch (newMode)
     {
     case OFF:
+        _string.setDirection(LedString::FORWARD); // TODO: Disable timer work when off.
         _string.setBrightness(0);
         break;
     case CONSTANT:
-        _string.setBrightness(511);
+        _string.setDirection(LedString::BOTH); // TODO: Change later. For debug
+        _string.setBrightness(1023);
         break;
     default:
         // Not supported now.

@@ -12,6 +12,8 @@ public:
                   uint8_t channel2Pin2);
     void begin();
     std::vector<LedChannel>& channels();
+    void onLoop();
 private:
+    struct ControllerImpl;
     std::vector<LedChannel> _channels;
 };

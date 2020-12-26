@@ -62,11 +62,11 @@ app.component('channel-view', {
             then(response => this.gotModes(response.data)).
             catch(error => console.log('Failed to get mode list: ' + error));
         this.getMode();
-        this.polling = setInterval(this.getMode, 1000);
+        // this.polling = setInterval(this.getMode, 1000);
     },
-    beforeUnmount() {
-        clearInterval(this.polling);
-    },
+    // beforeUnmount() {
+    //     clearInterval(this.polling);
+    // },
     updated() {
         $( "input" ).checkboxradio({
             icon: false
