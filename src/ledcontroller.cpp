@@ -11,6 +11,14 @@ LedController::LedController(uint8_t channel1Pin1,
 {
 }
 
+void LedController::begin()
+{
+    for (auto& channel : _channels)
+    {
+        channel.begin();
+    }
+}
+
 std::vector<LedChannel>& LedController::channels()
 {
     return _channels;

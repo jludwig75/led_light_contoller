@@ -27,6 +27,7 @@ LedController controller(CHANNEL1_PIN1,
 void setup()
 {
     Serial.begin(115200);
+    controller.begin();
 
     fileSystem_setup();
     wifi_setup(hostName, ssid, password);

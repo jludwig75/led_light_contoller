@@ -8,9 +8,16 @@ LedChannel::LedChannel(uint8_t channelNumber,
                        uint8_t pin2)
     :
     _channelNumber(channelNumber),
-    _mode(CONSTANT)
+    _mode(CONSTANT),
+    _string(pin1, pin2)
 {
 }
+
+void LedChannel::begin()
+{
+    _string.begin();
+}
+
 uint8_t LedChannel::number() const
 {
     return _channelNumber;
@@ -21,6 +28,19 @@ bool LedChannel::setMode(const String& mode)
     auto newMode = modeFromString(mode);
     if (newMode == UNKNOWN)
     {
+        return false;
+    }
+
+    switch (newMode)
+    {
+    case OFF:
+        _string.setBrightness(0);
+        break;
+    case CONSTANT:
+        _string.setBrightness(1023);
+        break;
+    default:
+        // Not supported now.
         return false;
     }
 
@@ -82,4 +102,4 @@ LedChannel::Mode LedChannel::modeFromString(const String& modeString)
     return UNKNOWN;
 }
 
-std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT), modeToString(FADE), modeToString(FADE_ALTERNATE) };
+std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT)};//, modeToString(FADE), modeToString(FADE_ALTERNATE) };

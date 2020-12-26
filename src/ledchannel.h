@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <WString.h>
 
+#include "ledstring.h"
+
 
 class LedChannel
 {
@@ -12,6 +14,7 @@ public:
     LedChannel(uint8_t channelNumber,
                uint8_t pin1,
                uint8_t pin2);
+    void begin();
     uint8_t number() const;
     bool setMode(const String& mode);
     String getMode() const;
@@ -31,4 +34,5 @@ private:
     uint8_t _channelNumber;
     Mode _mode;
     static std::vector<String> _supportedModes;
+    LedString _string;
 };
