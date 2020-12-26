@@ -24,6 +24,8 @@ LedController controller(CHANNEL1_PIN1,
                          CHANNEL2_PIN1,
                          CHANNEL2_PIN2);
 
+WebServer webServer(controller);
+
 void setup()
 {
     Serial.begin(115200);
@@ -32,12 +34,12 @@ void setup()
     fileSystem_setup();
     wifi_setup(hostName, ssid, password);
     ota_setup(hostName, otaPassword);
-    webServer_setup(controller);
+    webServer.begin();
 }
 
 void loop()
 {
     ota_onLoop();
-    webServer_onLoop();
+    webServer.onLoop();
     wifi_onLoop();
 }

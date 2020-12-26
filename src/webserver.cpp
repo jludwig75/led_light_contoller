@@ -7,12 +7,6 @@
 #include "ledcontroller.h"
 
 
-LedController* _controller = NULL;
-
-
-ESP8266WebServer server(80);
-
-
 const char* web_page = ""
 "<html>\n"
 "  <head>\n"
@@ -44,24 +38,50 @@ private:
     T* _buffer;
 };
 
-void handleGetUpload()
+WebServer::WebServer(LedController& controller)
+    :
+    _server(80),
+    _controller(controller)
 {
-    server.send(200, "text/html", web_page);
 }
 
-void handleRoot()
+void WebServer::begin()
+{
+    _server.on("/", [this](){ handle_root(); });
+    _server.on("/supported_modes", [this](){ handle_supported_modes(); });
+    _server.on("/channels", [this](){ handle_channels(); });
+    _server.on("/mode", [this](){ handle_mode(); });
+    _server.on("/upload", HTTP_POST, [this](){ replyOK(); }, [this](){ handle_upload_POST(); });
+    _server.on("/upload", HTTP_GET, [this](){ handle_upload_GET(); });
+    _server.serveStatic("/", SPIFFS, "/");
+    _server.begin();
+    Serial.println("HTTP server started");
+}
+
+void WebServer::onLoop()
+{
+    _server.handleClient();
+}
+
+
+void WebServer::handle_upload_GET()
+{
+    _server.send(200, "text/html", web_page);
+}
+
+void WebServer::handle_root()
 {
     File webpage = SPIFFS.open("/index.html", "r");
     if (!webpage)
     {
-        handleGetUpload();
+        handle_upload_GET();
         return;
     }
 
-    server.streamFile(webpage, "text/html");
+    _server.streamFile(webpage, "text/html");
 }
 
-void handle_supported_modes()
+void WebServer::handle_supported_modes()
 {
     String message = "[";
     for (const auto& mode : LedChannel::supportedModes())
@@ -73,13 +93,13 @@ void handle_supported_modes()
         message += "\"" + mode + "\"";
     }
     message += "]";
-    server.send(200, "application/json", message);
+    _server.send(200, "application/json", message);
 }
 
-void handle_channels()
+void WebServer::handle_channels()
 {
     String message = "[";
-    for (const auto& channel : _controller->channels())
+    for (const auto& channel : _controller.channels())
     {
         if (!message.endsWith("["))
         {
@@ -88,29 +108,29 @@ void handle_channels()
         message += String(channel.number());
     }
     message += "]";
-    server.send(200, "application/json", message);
+    _server.send(200, "application/json", message);
 }
 
-void handle_mode()
+void WebServer::handle_mode()
 {
-    if (server.method() == HTTP_POST || server.method() == HTTP_GET)
+    if (_server.method() == HTTP_POST || _server.method() == HTTP_GET)
     {
-        if (!server.hasArg("channel"))
+        if (!_server.hasArg("channel"))
         {
-            server.send(400, "txt/plain", "\"channel\" argument was not specified");
+            _server.send(400, "txt/plain", "\"channel\" argument was not specified");
             return;
         }
 
-        const auto& channelString = server.arg("channel");
+        const auto& channelString = _server.arg("channel");
         auto channelNumber = channelString.toInt();
         if (channelNumber == 0 && channelString != "0")
         {
-            server.send(400, "txt/plain", "Non-numeric value \"" + channelString + "\" for argument \"channel\"");
+            _server.send(400, "txt/plain", "Non-numeric value \"" + channelString + "\" for argument \"channel\"");
             return;
         }
 
         LedChannel* channel = NULL;
-        for (auto& _channel : _controller->channels())
+        for (auto& _channel : _controller.channels())
         {
             if (_channel.number() == channelNumber)
             {
@@ -120,66 +140,64 @@ void handle_mode()
         }
         if (channel == NULL)
         {
-            server.send(404, "txt/plain", "Channel \"" + channelString + "\" not found");
+            _server.send(404, "txt/plain", "Channel \"" + channelString + "\" not found");
             return;
         }
 
-        if (server.method() == HTTP_POST)
+        if (_server.method() == HTTP_POST)
         {
-            if (!server.hasArg("mode"))
+            if (!_server.hasArg("mode"))
             {
-                server.send(400, "txt/plain", "\"mode\" argument was not specified");
+                _server.send(400, "txt/plain", "\"mode\" argument was not specified");
                 return;
             }
 
-            const auto& mode = server.arg("mode");
+            const auto& mode = _server.arg("mode");
             if (!LedChannel::isSupportedMode(mode))
             {
-                server.send(400, "txt/plain", "\"" + mode + "\" is not a supported mode");
+                _server.send(400, "txt/plain", "\"" + mode + "\" is not a supported mode");
                 return;
             }
 
             if (channel->setMode(mode))
             {
-                server.send(200, "application/json", "OK");
+                _server.send(200, "application/json", "OK");
                 return;
             }
             else
             {
-                server.send(500, "txt/plain", "Unexpected error setting mode to \"" + mode + "\"");
+                _server.send(500, "txt/plain", "Unexpected error setting mode to \"" + mode + "\"");
                 return;
             }
         }
-        else if (server.method() == HTTP_GET)
+        else if (_server.method() == HTTP_GET)
         {
-            if (server.hasArg("mode"))
+            if (_server.hasArg("mode"))
             {
-                server.send(400, "txt/plain", "\"mode\" argument invalid for method GET");
+                _server.send(400, "txt/plain", "\"mode\" argument invalid for method GET");
                 return;
             }
 
-            server.send(200, "application/json", channel->getMode());
+            _server.send(200, "application/json", channel->getMode());
         }
     }
     else
     {
-        server.send(405, "txt/plain", "method not supported\r\n");
+        _server.send(405, "txt/plain", "method not supported\r\n");
     }
 }
 
-File uploadFile;
-
-void replyServerError(String msg)
+void WebServer::replyServerError(const String& msg)
 {
     Serial.println(msg);
-    server.send(500, "text/plain", msg + "\r\n");
+    _server.send(500, "text/plain", msg + "\r\n");
 }
 
-void handleUpload()
+void WebServer::handle_upload_POST()
 {
     Serial.println(String("Got upload request"));
 
-    HTTPUpload& upload = server.upload();
+    HTTPUpload& upload = _server.upload();
     if (upload.status == UPLOAD_FILE_START)
     {
         //String filename = "/index.html";
@@ -190,8 +208,8 @@ void handleUpload()
         }
 
         Serial.println(String("handleFileUpload Name: ") + filename);
-        uploadFile = SPIFFS.open(filename, "w");
-        if (!uploadFile)
+        _uploadFile = SPIFFS.open(filename, "w");
+        if (!_uploadFile)
         {
             return replyServerError(F("CREATE FAILED"));
         }
@@ -200,9 +218,9 @@ void handleUpload()
     }
     else if (upload.status == UPLOAD_FILE_WRITE)
     {
-        if (uploadFile)
+        if (_uploadFile)
         {
-            size_t bytesWritten = uploadFile.write(upload.buf, upload.currentSize);
+            size_t bytesWritten = _uploadFile.write(upload.buf, upload.currentSize);
             if (bytesWritten != upload.currentSize)
             {
                 return replyServerError(F("WRITE FAILED"));
@@ -212,38 +230,17 @@ void handleUpload()
     }
     else if (upload.status == UPLOAD_FILE_END)
     {
-        if (uploadFile)
+        if (_uploadFile)
         {
-            uploadFile.close();
+            _uploadFile.close();
         }
         Serial.println(String("Upload: END, Size: ") + upload.totalSize);
-        server.sendHeader("Location", String("/"), true);
-        server.send ( 302, "text/plain", "");
+        _server.sendHeader("Location", String("/"), true);
+        _server.send ( 302, "text/plain", "");
     }
 }
 
-void replyOK()
+void WebServer::replyOK()
 {
-    server.send(200, "text/plain", "");
-}
-
-
-void webServer_setup(LedController& controller)
-{
-    _controller = &controller;
-
-    server.on("/", handleRoot);
-    server.on("/supported_modes", handle_supported_modes);
-    server.on("/channels", handle_channels);
-    server.on("/mode", handle_mode);
-    server.on("/upload", HTTP_POST, replyOK, handleUpload);
-    server.on("/upload", HTTP_GET, handleGetUpload);
-    server.serveStatic("/", SPIFFS, "/");
-    server.begin();
-    Serial.println("HTTP server started");
-}
-
-void webServer_onLoop()
-{
-    server.handleClient();
+    _server.send(200, "text/plain", "");
 }
