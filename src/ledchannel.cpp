@@ -8,6 +8,7 @@
 
 static FadeFunction fadeFunction(1000, 1500, 500);
 static AlternateFadeFunction alternateFadeFunction(1000, 1500, 500);
+static AlternateFadeFunction slowPulseFunction(1000, 200, 100);
 
 
 LedChannel::LedChannel(uint8_t channelNumber,
@@ -73,6 +74,9 @@ bool LedChannel::setMode(const String& mode)
     case FADE_ALTERNATE:
         _currentFunction = &alternateFadeFunction;
         break;
+    case SLOW_PULSE:
+        _currentFunction = &slowPulseFunction;
+        break;
     default:
         // Not supported now.
         return false;
@@ -110,6 +114,8 @@ String LedChannel::modeToString(Mode mode)
             return "Fade";
         case FADE_ALTERNATE:
             return "Alternating Fade";
+        case SLOW_PULSE:
+            return "Slow Pulse";
         default:
             return "UNKNOWN";
     }
@@ -133,7 +139,17 @@ LedChannel::Mode LedChannel::modeFromString(const String& modeString)
     {
         return FADE_ALTERNATE;
     }
+    if (modeString == "Slow Pulse")
+    {
+        return SLOW_PULSE;
+    }
     return UNKNOWN;
 }
 
-std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT), modeToString(FADE), modeToString(FADE_ALTERNATE) };
+std::vector<String> LedChannel::_supportedModes{
+                                                modeToString(OFF),
+                                                modeToString(CONSTANT),
+                                                modeToString(FADE),
+                                                modeToString(FADE_ALTERNATE),
+                                                modeToString(SLOW_PULSE)
+                                               };
