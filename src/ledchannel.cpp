@@ -6,8 +6,8 @@
 #include "altfadefunc.h"
 
 
-static FadeFunction fadeFunction(2000, 4000, 1000);
-static AlternateFadeFunction alternateFadeFunction(2000, 4000, 1000);
+static FadeFunction fadeFunction(1000, 1500, 500);
+static AlternateFadeFunction alternateFadeFunction(1000, 1500, 500);
 
 
 LedChannel::LedChannel(uint8_t channelNumber,
