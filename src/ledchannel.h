@@ -8,6 +8,8 @@
 #include "ledstring.h"
 
 
+class StringFunction;
+
 class LedChannel
 {
 public:
@@ -37,4 +39,5 @@ private:
     Mode _mode;
     static std::vector<String> _supportedModes;
     LedString _string;
+    StringFunction* _currentFunction;
 };

@@ -2,6 +2,13 @@
 
 #include <Arduino.h>
 
+#include "fadefunc.h"
+#include "altfadefunc.h"
+
+
+static FadeFunction fadeFunction(2000, 4000, 1000);
+static AlternateFadeFunction alternateFadeFunction(2000, 4000, 1000);
+
 
 LedChannel::LedChannel(uint8_t channelNumber,
                        uint8_t pin1,
@@ -9,7 +16,8 @@ LedChannel::LedChannel(uint8_t channelNumber,
     :
     _channelNumber(channelNumber),
     _mode(CONSTANT),
-    _string(pin1, pin2)
+    _string(pin1, pin2),
+    _currentFunction(NULL)
 {
 }
 
@@ -21,6 +29,12 @@ void LedChannel::begin()
 
 void LedChannel::onLoop()
 {
+    if (_currentFunction)
+    {
+        auto t = millis();
+        _string.setDirection(_currentFunction->direction(t));
+        _string.setBrightness((*_currentFunction)(t));
+    }
     _string.onLoop();
 }
 
@@ -41,16 +55,23 @@ bool LedChannel::setMode(const String& mode)
     {
         return false;
     }
+    _currentFunction = NULL;
 
     switch (newMode)
     {
     case OFF:
-        _string.setDirection(LedString::FORWARD); // TODO: Disable timer work when off.
+        _string.setDirection(LedString::FORWARD); // Disable timer work when off.
         _string.setBrightness(0);
         break;
     case CONSTANT:
-        _string.setDirection(LedString::BOTH); // TODO: Change later. For debug
+        _string.setDirection(LedString::BOTH);
         _string.setBrightness(1023);
+        break;
+    case FADE:
+        _currentFunction = &fadeFunction;
+        break;
+    case FADE_ALTERNATE:
+        _currentFunction = &alternateFadeFunction;
         break;
     default:
         // Not supported now.
@@ -115,4 +136,4 @@ LedChannel::Mode LedChannel::modeFromString(const String& modeString)
     return UNKNOWN;
 }
 
-std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT)};//, modeToString(FADE), modeToString(FADE_ALTERNATE) };
+std::vector<String> LedChannel::_supportedModes{ modeToString(OFF), modeToString(CONSTANT), modeToString(FADE), modeToString(FADE_ALTERNATE) };
