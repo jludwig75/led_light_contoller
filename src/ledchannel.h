@@ -32,6 +32,7 @@ private:
         FADE,
         FADE_ALTERNATE,
         SLOW_PULSE,
+        STAR_LIGHT,
         UNKNOWN = 999
     };
     static String modeToString(Mode mode);
