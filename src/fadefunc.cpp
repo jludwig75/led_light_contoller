@@ -39,7 +39,7 @@ int FadeFunction::operator()(unsigned long time)
     return 0;
 }
 
-LedString::Direction FadeFunction::direction(unsigned long time)
+LedString::Stripe FadeFunction::stripe(unsigned long time)
 {
     return LedString::BOTH;
 }

@@ -3,17 +3,17 @@
 #include <Arduino.h>
 
 
-static volatile LedString::Direction _currentTimerDirection = LedString::FORWARD;
+static volatile LedString::Stripe _currentTimerStripe = LedString::STRIPE0;
 
 void LedString::onTimerInterval()
 {
-    if (_currentTimerDirection == LedString::FORWARD)
+    if (_currentTimerStripe == LedString::STRIPE0)
     {
-        _currentTimerDirection = LedString::REVERSE;
+        _currentTimerStripe = LedString::STRIPE1;
     }
-    else    // REVERSE
+    else    // STRIPE1
     {
-        _currentTimerDirection = LedString::FORWARD;
+        _currentTimerStripe = LedString::STRIPE0;
     }
 }
 
@@ -21,9 +21,9 @@ LedString::LedString(uint8_t pin1, uint8_t pin2)
     :
     _pin1(pin1),
     _pin2(pin2),
-    _direction(FORWARD),    // Don't enable timer work until needed.
+    _stripe(STRIPE0),    // Don't enable timer work until needed.
     _brightness(0),
-    _lastTimerDirection(BOTH)
+    _lastTimerStripe(BOTH)
 {
 }
 
@@ -34,13 +34,13 @@ void LedString::begin()
     analogWrite(_pin2, 0);
 }
 
-void LedString::setDirection(Direction direction)
+void LedString::setStripe(Stripe stripe)
 {
-    if (direction == _direction)
+    if (stripe == _stripe)
     {
         return;
     }
-    _direction = direction;
+    _stripe = stripe;
 
     analogWrite(_pin1, 0);
     analogWrite(_pin2, 0);
@@ -64,11 +64,11 @@ void LedString::setBrightness(int brightness)
 
 void LedString::updateBrightness()
 {
-    if (_direction == FORWARD)
+    if (_stripe == STRIPE0)
     {
         analogWrite(_pin1, _brightness);
     }
-    else if (_direction == REVERSE)
+    else if (_stripe == STRIPE1)
     {
         analogWrite(_pin2, _brightness);
     }
@@ -77,21 +77,21 @@ void LedString::updateBrightness()
 
 void LedString::onLoop()
 {
-    if (_direction == BOTH)
+    if (_stripe == BOTH)
     {
-        volatile Direction currentDirection = _currentTimerDirection;
-        if (_lastTimerDirection == currentDirection)
+        volatile Stripe currentStripe = _currentTimerStripe;
+        if (_lastTimerStripe == currentStripe)
         {
             return;
         }
-        _lastTimerDirection = currentDirection;
-        // Use whatever direction the timer has set.
-        if (currentDirection == FORWARD)
+        _lastTimerStripe = currentStripe;
+        // Use whatever stripe the timer has set.
+        if (currentStripe == STRIPE0)
         {
             analogWrite(_pin2, 0);
             analogWrite(_pin1, _brightness);
         }
-        else // REVERSE
+        else // STRIPE1
         {
             analogWrite(_pin1, 0);
             analogWrite(_pin2, _brightness);

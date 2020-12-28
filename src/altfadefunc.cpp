@@ -7,9 +7,9 @@ AlternateFadeFunction::AlternateFadeFunction(unsigned long offTime, unsigned lon
 {
 }
 
-LedString::Direction AlternateFadeFunction::direction(unsigned long time)
+LedString::Stripe AlternateFadeFunction::stripe(unsigned long time)
 {
     auto interval = time / cycleDuration();
 
-    return (interval % 2 ? LedString::FORWARD : LedString::REVERSE);
+    return (interval % 2 ? LedString::STRIPE0 : LedString::STRIPE1);
 }
