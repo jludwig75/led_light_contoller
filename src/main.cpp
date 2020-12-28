@@ -30,9 +30,9 @@ void setup()
 {
     Serial.begin(115200);
     delay(50);
+    fileSystem_setup();
     controller.begin();
 
-    fileSystem_setup();
     wifi_setup(hostName, ssid, password);
     ota_setup(hostName, otaPassword);
     webServer.begin();

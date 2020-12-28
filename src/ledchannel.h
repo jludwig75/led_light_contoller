@@ -37,9 +37,12 @@ private:
     };
     static String modeToString(Mode mode);
     static Mode modeFromString(const String& modeString);
+    bool saveMode();
+    bool loadMode();
     uint8_t _channelNumber;
     Mode _mode;
     static std::vector<String> _supportedModes;
     LedString _string;
     StringFunction* _currentFunction;
+    String _channelFileName;
 };

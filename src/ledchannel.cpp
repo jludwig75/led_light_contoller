@@ -1,6 +1,7 @@
 #include "ledchannel.h"
 
 #include <Arduino.h>
+#include <FS.h>
 
 #include "fadefunc.h"
 #include "altfadefunc.h"
@@ -19,13 +20,20 @@ LedChannel::LedChannel(uint8_t channelNumber,
     _channelNumber(channelNumber),
     _mode(CONSTANT),
     _string(pin1, pin2),
-    _currentFunction(NULL)
+    _currentFunction(NULL),
+    _channelFileName(String("/channel") + String(channelNumber) + ".mode")
 {
 }
 
 void LedChannel::begin()
 {
     _string.begin();
+    if (!loadMode())
+    {
+        Serial.println("Failed to load mode for channel " + String(_channelNumber));
+        // Not fatal.
+    }
+    
     setMode(modeToString(_mode));
 }
 
@@ -88,6 +96,16 @@ bool LedChannel::setMode(const String& mode)
 
     Serial.println("Changed channel " + String(_channelNumber) + " mode to \"" + mode + "\"");
     _mode = newMode;
+    if (!LedChannel::saveMode())
+    {
+        Serial.println("Failed to presist mode for channel " + String(_channelNumber));
+        // Not a fatal error.
+    }
+    else
+    {
+        Serial.println("Successfully saved mode " + String(_mode) + " for channel " + String(_channelNumber));
+    }
+    
     return true;
 }
 
@@ -95,6 +113,31 @@ String LedChannel::getMode() const
 {
     return modeToString(_mode);
 }
+
+bool LedChannel::saveMode()
+{
+    auto file = SPIFFS.open(_channelFileName, "w");
+    if (!file)
+    {
+        return false;
+    }
+
+    auto ret = file.write((const uint8_t *)&_mode, sizeof(_mode));
+    return ret == sizeof(_mode);
+}
+
+bool LedChannel::loadMode()
+{
+    auto file = SPIFFS.open(_channelFileName, "r");
+    if (!file)
+    {
+        return false;
+    }
+
+    auto ret = file.read((uint8_t *)&_mode, sizeof(_mode));
+    return ret == sizeof(_mode);
+}
+
 
 std::vector<String> LedChannel::supportedModes()
 {
