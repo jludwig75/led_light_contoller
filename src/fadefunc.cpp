@@ -12,12 +12,12 @@ FadeFunction::FadeFunction(unsigned long offTime,
 {
 }
 
-int FadeFunction::operator()(unsigned long time)
+StringFunction::StripeValues FadeFunction::operator()(unsigned long time)
 {
     time %= _cycleDuration;
     if (time < _fadeInStartTime)
     {
-        return 0;
+        return StripeValues(0);
     }
 
     if (time < _holdStartTime)
@@ -27,21 +27,16 @@ int FadeFunction::operator()(unsigned long time)
 
     if (time < _fadeOutStartTime)
     {
-        return 1023;
+        return StripeValues(1023);
     }
 
     if (time < _cycleDuration)
     {
-        return 1023 - (((time - _fadeOutStartTime) * 1023) / (_cycleDuration - _fadeOutStartTime));
+        return StripeValues(1023 - (((time - _fadeOutStartTime) * 1023) / (_cycleDuration - _fadeOutStartTime)));
     }
 
     // Shouldn't ever hit this.
-    return 0;
-}
-
-LedString::Stripe FadeFunction::stripe(unsigned long time)
-{
-    return LedString::BOTH;
+    return StripeValues(0);
 }
 
 unsigned long FadeFunction::cycleDuration() const

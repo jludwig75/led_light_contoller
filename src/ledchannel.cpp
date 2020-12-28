@@ -9,6 +9,7 @@
 
 static FadeFunction fadeFunction(1000, 1500, 500);
 static AlternateFadeFunction alternateFadeFunction(1000, 1500, 500);
+// static AlternateFadeFunction alternateFadeFunction(5000, 50, 50);
 static AlternateFadeFunction slowPulseFunction(1000, 200, 100);
 static FadeFunction starLightFunction(300, 120, 3000);
 
@@ -42,7 +43,6 @@ void LedChannel::onLoop()
     if (_currentFunction)
     {
         auto t = millis();
-        _string.setStripe(_currentFunction->stripe(t));
         _string.setBrightness((*_currentFunction)(t));
     }
     _string.onLoop();
@@ -70,11 +70,9 @@ bool LedChannel::setMode(const String& mode)
     switch (newMode)
     {
     case OFF:
-        _string.setStripe(LedString::STRIPE0); // Disable timer work when off.
         _string.setBrightness(0);
         break;
     case CONSTANT:
-        _string.setStripe(LedString::BOTH);
         _string.setBrightness(1023);
         break;
     case FADE:

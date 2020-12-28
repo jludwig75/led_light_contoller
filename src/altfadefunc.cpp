@@ -7,9 +7,26 @@ AlternateFadeFunction::AlternateFadeFunction(unsigned long offTime, unsigned lon
 {
 }
 
-LedString::Stripe AlternateFadeFunction::stripe(unsigned long time)
+StringFunction::StripeValues AlternateFadeFunction::operator()(unsigned long time)
+{
+    auto values = FadeFunction::operator()(time);
+    auto stripe = activeStripe(time);
+    if (stripe == 0)
+    {
+        values.stripe1Brightness = 0;
+    }
+    else
+    {
+        values.stripe0Brightness = 1;
+    }
+
+    return values;
+}
+
+
+int AlternateFadeFunction::activeStripe(unsigned long time)
 {
     auto interval = time / cycleDuration();
 
-    return (interval % 2 ? LedString::STRIPE0 : LedString::STRIPE1);
+    return interval % 2;
 }

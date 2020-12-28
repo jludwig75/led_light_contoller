@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 
-static volatile LedString::Stripe _currentTimerStripe = LedString::STRIPE0;
+volatile LedString::Stripe LedString::_currentTimerStripe = LedString::STRIPE0;
 
 void LedString::onTimerInterval()
 {
@@ -21,8 +21,8 @@ LedString::LedString(uint8_t pin1, uint8_t pin2)
     :
     _pin1(pin1),
     _pin2(pin2),
-    _stripe(STRIPE0),    // Don't enable timer work until needed.
-    _brightness(0),
+    _stripe0Brightness(0),
+    _stripe1Brightness(0),
     _lastTimerStripe(BOTH)
 {
 }
@@ -34,67 +34,69 @@ void LedString::begin()
     analogWrite(_pin2, 0);
 }
 
-void LedString::setStripe(Stripe stripe)
-{
-    if (stripe == _stripe)
-    {
-        return;
-    }
-    _stripe = stripe;
-
-    analogWrite(_pin1, 0);
-    analogWrite(_pin2, 0);
-
-    if (_brightness > 0)
-    {
-        updateBrightness();
-    }
-}
-
 void LedString::setBrightness(int brightness)
 {
-    if (_brightness == brightness)
-    {
-        return;
-    }
-    _brightness = brightness;
-
-    updateBrightness();
+    setStripe0Brightness(brightness);
+    setStripe1Brightness(brightness);
 }
 
-void LedString::updateBrightness()
+void LedString::setBrightness(const StringFunction::StripeValues& brightnessValues)
 {
-    if (_stripe == STRIPE0)
+    setStripe0Brightness(brightnessValues.stripe0Brightness);
+    setStripe1Brightness(brightnessValues.stripe1Brightness);
+}
+
+
+void LedString::setStripe0Brightness(int brightness)
+{
+    if (brightness <= 2)
     {
-        analogWrite(_pin1, _brightness);
+        brightness = 0;
     }
-    else if (_stripe == STRIPE1)
+    if (brightness == _stripe0Brightness)
     {
-        analogWrite(_pin2, _brightness);
+        // No change
+        return;
     }
-    // Do nothing here for BOTH. The onLoop call will pick up the new brightness.
+    // Serial.print("0:"); Serial.println(brightness);
+    _stripe0Brightness = brightness;
+}
+
+void LedString::setStripe1Brightness(int brightness)
+{
+    if (brightness <= 2)
+    {
+        brightness = 0;
+    }
+    if (brightness == _stripe1Brightness)
+    {
+        // No change
+        return;
+    }
+    // Serial.print("1:"); Serial.println(brightness);
+    _stripe1Brightness = brightness;
 }
 
 void LedString::onLoop()
 {
-    if (_stripe == BOTH)
+    volatile Stripe currentStripe = _currentTimerStripe;
+    if (_lastTimerStripe == currentStripe)
     {
-        volatile Stripe currentStripe = _currentTimerStripe;
-        if (_lastTimerStripe == currentStripe)
-        {
-            return;
-        }
-        _lastTimerStripe = currentStripe;
-        // Use whatever stripe the timer has set.
-        if (currentStripe == STRIPE0)
-        {
-            analogWrite(_pin2, 0);
-            analogWrite(_pin1, _brightness);
-        }
-        else // STRIPE1
-        {
-            analogWrite(_pin1, 0);
-            analogWrite(_pin2, _brightness);
-        }
+        // It's OK to only change the brightness when
+        // the stripe changes. The user won't notice 
+        // a 10 ms delay.
+        return;
+    }
+    _lastTimerStripe = currentStripe;
+    // Use whatever stripe the timer has set.
+    if (currentStripe == STRIPE0)
+    {
+        analogWrite(_pin2, 0);
+        analogWrite(_pin1, _stripe0Brightness);
+    }
+    else // STRIPE1
+    {
+        analogWrite(_pin1, 0);
+        analogWrite(_pin2, _stripe1Brightness);
     }
 }

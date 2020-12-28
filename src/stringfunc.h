@@ -1,11 +1,25 @@
 #pragma once
 
-#include "ledstring.h"
-
 
 class StringFunction
 {
 public:
-    virtual int operator()(unsigned long time) = 0;
-    virtual LedString::Stripe stripe(unsigned long time) = 0;
+    struct StripeValues
+    {
+        StripeValues(int stripe0Brightness, int stripe1Brightness)
+            :
+            stripe0Brightness(stripe0Brightness),
+            stripe1Brightness(stripe1Brightness)
+        {
+        }
+        StripeValues(int brightness)
+            :
+            stripe0Brightness(brightness),
+            stripe1Brightness(brightness)
+        {
+        }
+        int stripe0Brightness;
+        int stripe1Brightness;
+    };
+    virtual StripeValues operator()(unsigned long time) = 0;
 };
