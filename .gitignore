@@ -1,3 +1,24 @@
 .pio
 .vscode
 src/config.h
+
+
+# Ignore list for KiCAD Projects
+# Temporary files
+board_kicad/*.000
+board_kicad/*.bak
+board_kicad/*-bak
+board_kicad/*.bck
+board_kicad/*.kicad_pcb-bak
+board_kicad/*.sch-bak
+board_kicad/*~
+_autosave-*
+board_kicad/*.tmp
+board_kicad/*-save.pro
+board_kicad/*-save.kicad_pcb
+board_kicad/fp-info-cache
+# Netlist files (exported from Eeschema)
+board_kicad/*.net
+# Autorouter files (exported from Pcbnew)
+board_kicad/*.dsn
+board_kicad/*.ses

@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name led_light_contoller_board)(type KiCad)(uri /home/jludwig/led_light_contoller_board.pretty)(options "")(descr ""))
+)
