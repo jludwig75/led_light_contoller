@@ -9,7 +9,6 @@
 /* NOTE: please add this file (config.h) and define the following in it:
 const char* ssid = "SSID Name";
 const char* password = "SSID Passwod";
-const char* hostName = "Desired board host name";
 const char* otaPassword = "Desired OTA password";
 const uint8_t CHANNEL1_PIN1 = 1;
 const uint8_t CHANNEL1_PIN2 = 2;
@@ -33,8 +32,8 @@ void setup()
     fileSystem_setup();
     controller.begin();
 
-    wifi_setup(hostName, ssid, password);
-    ota_setup(hostName, otaPassword);
+    wifi_setup(HOST_NAME, ssid, password);
+    ota_setup(HOST_NAME, otaPassword);
     webServer.begin();
 }
 
